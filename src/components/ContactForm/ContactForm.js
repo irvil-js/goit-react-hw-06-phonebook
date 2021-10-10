@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-// import { v4 as uuidv4 } from 'uuid';
+import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import phonebookAction from '../../redux/phonebook/phonebook-actions';
+import { getItems } from '../../redux/phonebook/phonebook-selectors';
 import styles from './ContactForm.module.css';
 
-function ContactForm({ onSubmit, onRepeat }) {
+function ContactForm() {
+  const items = useSelector(getItems);
+  const dispatch = useDispatch();
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
@@ -22,12 +27,30 @@ function ContactForm({ onSubmit, onRepeat }) {
     }
   };
 
+  const repeatContact = name => {
+    const repeatName = name.toLowerCase();
+    return items.find(contact => contact.name === repeatName);
+  };
+  const addContact = () => dispatch(phonebookAction.addContact(name, number));
+
   const handleSubmit = event => {
     event.preventDefault();
-    // const id = uuidv4();
+    const repeat = repeatContact(name);
+    if (name.length < 2) {
+      toast.warn(
+        `Текст должен быть не меньше 2 символов, сейчас ${name.length}`,
+      );
+      return;
+    }
 
-    onSubmit(name, number);
-    onRepeat(name, number);
+    if (number.length < 5) {
+      toast.warn(
+        `Номер должен быть не меньше 5 символов, сейчас ${number.length}`,
+      );
+      return;
+    }
+
+    repeat ? toast.error(`${name} уже существует!`) : addContact();
 
     reset();
   };
